@@ -2,6 +2,8 @@ let allHeroes = [];
 let filteredHeroes = [];
 let currentPage = 1;
 let pageSize = 20 ;
+let sortColumn = 'name';                                                                                                  
+let sortAscending = true;     
 
 
 function createControls(){
@@ -91,11 +93,49 @@ function renderTable(allHeroes){
     const tableHead = document.createElement('thead')
     const headerRow = document.createElement('tr')
 
-    for( const header of headers){
-        const th = document.createElement('th')
-        th.textContent = header
-        headerRow.appendChild(th)
-    }
+    const columnMapping = {                                                                                                                                               
+          "Icon": "id",                                                                                                                                                       
+          "Name": "name",                                                                                                                                                     
+          "Full Name": "biography.fullName",                                                                                                                                  
+          "Intelligence": "powerstats.intelligence",                                                                                                                          
+          "Race": "appearance.race",                                                                                                                                          
+          "Gender": "appearance.gender",                                                                                                                                      
+          "Height": "appearance.height",                                                                                                                                      
+          "Weight": "appearance.weight",                                                                                                                                      
+          "Place of Birth": "biography.placeOfBirth",                                                                                                                         
+          "Alignment": "biography.alignment",                                                                                                                                 
+          "Strength": "powerstats.strength",                                                                                                                                  
+          "Speed": "powerstats.speed",                                                                                                                                        
+          "Durability": "powerstats.durability",                                                                                                                              
+          "Power": "powerstats.power",                                                                                                                                        
+          "Combat": "powerstats.combat"                                                                                                                                       
+        };                                                                                                                                                                    
+                                                                                                                                                                              
+        for (const header of headers) {                                                                                                                                       
+            const th = document.createElement('th');                                                                                                                          
+            th.textContent = header;                                                                                                                                          
+            th.style.cursor = 'pointer'; //                                                                                                         
+                                                                                                                                                                              
+            const fieldPath = columnMapping[header];                                                                                                                          
+                                                                                                                                                                              
+                                                                                                                                           
+            th.addEventListener('click', () => {                                                                                                                              
+                if (sortColumn === fieldPath) {                                                                                                                               
+                    sortAscending = !sortAscending;                                                                                                     
+                } else {                                                                                                                                                      
+                    sortColumn = fieldPath;                                                                                                                                   
+                    sortAscending = true; // Default to ascending                                                                                                             
+                }
+                UpdateDisplay();
+            });
+  
+            
+            if (fieldPath === sortColumn) {
+                th.textContent += sortAscending ? ' ascending' : ' descending';
+            }
+  
+            headerRow.appendChild(th);
+        }
 
     tableHead.appendChild(headerRow)
     table.appendChild(tableHead)
@@ -173,7 +213,98 @@ function renderTable(allHeroes){
     container.appendChild(table);
 }  
 
-function UpdateDisplay() {                                                                                                                                                
+function getNumericHeight(heightArray) {                                                                                                                                  
+    if (!heightArray || heightArray.length < 2){ 
+        return null
+    };                                                                                                              
+    let cmStr = heightArray[1];                                                                                                                                           
+    if (!cmStr || cmStr === "-" || cmStr === "0 cm"){
+        return null;
+    }                                                                                                             
+    cmStr = cmStr.trim();                                                                                                                                                 
+    if (cmStr.endsWith(" meters")) {                                                                                                                                      
+        let meters = parseFloat(cmStr.replace(/,/g, ''));                                                                                                                 
+        return isNaN(meters) ? null : meters * 100;                                                                                                                       
+    }                                                                                                                                                                     
+    let cm = parseFloat(cmStr.replace(/,/g, ''))
+
+    return isNaN(cm) || cm === 0 ? null : cm                                                                                                                            
+}
+
+function getNumericWeight(weightArray) {                                                                                                                                  
+    if (!weightArray || weightArray.length < 2){ 
+        return null;
+    }                                                                                                                  
+    let kgStr = weightArray[1];                                                                                                                                           
+    if (!kgStr || kgStr === "-" || kgStr === "0 kg"){
+        return null;
+    }                                                                                                             
+    kgStr = kgStr.trim();                                                                                                                                                 
+    if (kgStr.endsWith(" tons")) {                                                                                                                                        
+        let tons = parseFloat(kgStr.replace(/,/g, ''));                                                                                                                   
+        return isNaN(tons) ? null : tons * 1000;                                                                                                                          
+    }                                                                                                                                                                     
+    let kg = parseFloat(kgStr.replace(/,/g, ''));                                                                                                                         
+    return isNaN(kg) || kg === 0 ? null : kg;                                                                                                                             
+    }
+    
+function compareValues(a, b, isAsc, isNumeric) {                                                                                                                          
+    let isMissingA = a === null || a === undefined || a === '' || a === '-';                                                                                              
+    let isMissingB = b === null || b === undefined || b === '' || b === '-';                                                                                              
+                                                                                                                                                                              
+    if (isMissingA && isMissingB){
+        return 0;
+    }                                                                                                                                   
+    if (isMissingA) {
+        return 1;
+    }  // 'a' (missing) goes last                                                                                                                 
+    if (isMissingB) {
+        return -1
+    }; // 'b' (missing) goes last                                                                                                                 
+  
+    if (isNumeric) {
+        let numA = Number(a);
+        let numB = Number(b);
+        return isAsc ? numA - numB : numB - numA;
+    } else {
+        let strA = String(a).toLowerCase();
+        let strB = String(b).toLowerCase();
+        return isAsc ? strA.localeCompare(strB) : strB.localeCompare(strA);
+    }
+    }
+      
+        
+function getSortValue(hero, col) {                                                                                                                                        
+    if (col === 'appearance.height') {                                                                                                                                    
+        return getNumericHeight(hero.appearance.height);                                                                                                                  
+    }                                                                                                                                                                     
+    if (col === 'appearance.weight') {                                                                                                                                    
+        return getNumericWeight(hero.appearance.weight);                                                                                                                  
+    }                                                                                                                                                                     
+                                                                                                                                                                              
+        // For nested fields like biography.fullName, we split by '.' and traverse                                                                                            
+    const parts = col.split('.');                                                                                                                                         
+    let val = hero;                                                                                                                                                       
+    for (const part of parts) {                                                                                                                                           
+        if (val === null || val === undefined) return null;                                                                                                               
+            val = val[part];                                                                                                                                                  
+        }                                                                                                                                                                     
+    return val;                                                                                                                                                           
+} 
+
+
+function UpdateDisplay() {  
+    
+    const isNumeric = sortColumn.startsWith('powerstats') ||                                                                                                              
+                    sortColumn === 'appearance.height' ||                                                                                                               
+                    sortColumn === 'appearance.weight' ||                                                                                                               
+                    sortColumn === 'id';                                                                                                                                
+                                                                                                                                                                              
+    filteredHeroes.sort((a, b) => {
+        const valA = getSortValue(a, sortColumn);
+        const valB = getSortValue(b, sortColumn);
+        return compareValues(valA, valB, sortAscending, isNumeric);
+    });
                                                                                           
     let limit = pageSize === 'all' ? filteredHeroes.length : parseInt(pageSize);                                                                                                                                                                                                                                                                                       
     let totalPages = Math.ceil(filteredHeroes.length / limit) || 1;                                                                                                       
