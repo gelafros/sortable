@@ -1,17 +1,26 @@
 let allHeroes = [];
+let filteredHeroes = [];
+let currentPage = 1;
+let pageSize = 20 ;
 
-
-const loadData = (heroes) => {
-  allHeroes = heroes
-  createControls()
-  renderTable(allHeroes)
-}
 
 function createControls(){
     const searchField = document.createElement('input');                                                                                                                  
         searchField.id = 'search-input';                                                                                                                                      
         searchField.placeholder = 'Search by name...';                                                                                                                        
         document.body.appendChild(searchField);  
+
+     searchField.addEventListener('input', (event) => {                                                                                                                        
+        const query = event.target.value.toLowerCase().trim();                                                                                                                
+                                                                                                                                                                              
+        // Filter the heroes by name                                                                                                                                          
+        filteredHeroes = allHeroes.filter(hero =>                                                                                                                             
+            hero.name.toLowerCase().includes(query)                                                                                                                           
+        );                                                                                                                                                                    
+                                                                                                                                                                              
+        currentPage = 1; 
+        UpdateDisplay(); 
+    });    
 
     const select = document.createElement('select');                                                                                                                      
         select.id = 'page-size'; 
@@ -25,22 +34,48 @@ function createControls(){
             }// default size is 20                                                                                                    
             select.appendChild(option);                                                                                                                         
         }                                                                                                                                                                     
-        document.body.appendChild(select); 
+        document.body.appendChild(select);
+        
+    select.addEventListener('change', (event) => {                                                                                                                                
+        pageSize = event.target.value;                                                                                                                                            
+        currentPage = 1; // Reset to first page                                                                                                                               
+        UpdateDisplay();                                                                                                                                                      
+    });    
 
     const prevButton = document.createElement('button');                                                                                                                  
         prevButton.id = 'prev-btn';                                                                                                                                           
         prevButton.textContent = 'Previous';                                                                                                                                  
-        document.body.appendChild(prevButton);  
+        document.body.appendChild(prevButton);
+        
+    prevButton.addEventListener('click', () => {                                                                                                                              
+        if (currentPage > 1) {                                                                                                                                                
+            currentPage--;                                                                                                                                                    
+            UpdateDisplay();                                                                                                                                                  
+        }                                                                                                                                                                     
+    });     
 
     const nextButton = document.createElement('button');                                                                                                                  
         nextButton.id = 'next-btn';                                                                                                                                           
         nextButton.textContent = 'Next';                                                                                                                                      
         document.body.appendChild(nextButton);
 
+    nextButton.addEventListener('click', () => {
+        let limit = pageSize === 'all' ? filteredHeroes.length : parseInt(pageSize);
+        let totalPages = Math.ceil(filteredHeroes.length / limit) || 1;
+        if (currentPage < totalPages) {
+            currentPage++;
+            UpdateDisplay();
+        }
+    });     
+
     const pageInfo = document.createElement('span');                                                                                                                      
         pageInfo.id = 'page-info';                                                                                                                                            
         pageInfo.textContent = 'Page 1 of 1';                                                                                                                                 
-        document.body.appendChild(pageInfo);  
+        document.body.appendChild(pageInfo); 
+        
+    const tableContainer = document.createElement('div');
+        tableContainer.id = 'table-container';
+        document.body.appendChild(tableContainer);
 }
 
 function renderTable(allHeroes){
@@ -133,13 +168,39 @@ function renderTable(allHeroes){
         table.appendChild(row)
     }
 
-    
-    
-    document.body.appendChild(table)
+    const container = document.getElementById('table-container');
+    container.innerHTML = '';
+    container.appendChild(table);
 }  
 
+function UpdateDisplay() {                                                                                                                                                
+                                                                                          
+    let limit = pageSize === 'all' ? filteredHeroes.length : parseInt(pageSize);                                                                                                                                                                                                                                                                                       
+    let totalPages = Math.ceil(filteredHeroes.length / limit) || 1;                                                                                                       
+                                                                                                                                                                                                                                                                                                  
+    if (currentPage > totalPages) currentPage = totalPages;                                                                                                               
+    if (currentPage < 1) currentPage = 1;                                                                                                                                 
+                                                                                                                                                                              
+                                                                                                                   
+    let startIndex = (currentPage - 1) * limit;                                                                                                                           
+    let endIndex = startIndex + limit;                                                                                                                                    
+    let pageHeroes = filteredHeroes.slice(startIndex, endIndex);                                                                                                          
+                                                                                                                                                                                                                                                                                                   
+    renderTable(pageHeroes);                                                                                                                                              
+                                                                                                                                                                              
+                                                                                                      
+    document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;                                                                            
+    document.getElementById('prev-btn').disabled = (currentPage === 1);                                                                                                   
+    document.getElementById('next-btn').disabled = (currentPage === totalPages);
+}     
 
 
+const loadData = (heroes) => {
+  allHeroes = heroes
+  filteredHeroes = [...heroes]
+  createControls()
+  UpdateDisplay()
+}
 
 fetch("https://rawcdn.githack.com/akabab/superhero-api/0.2.0/api/all.json")
   .then((response) => response.json()) 
