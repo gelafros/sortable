@@ -3,7 +3,7 @@ let filteredHeroes = [];
 let currentPage = 1;
 let pageSize = 20 ;
 let sortColumn = 'name';                                                                                                  
-let sortAscending = true;     
+let sortDirection = 'asc'    
 
 
 function createControls(){
@@ -119,19 +119,27 @@ function renderTable(allHeroes){
             const fieldPath = columnMapping[header];                                                                                                                          
                                                                                                                                                                               
                                                                                                                                            
-            th.addEventListener('click', () => {                                                                                                                              
-                if (sortColumn === fieldPath) {                                                                                                                               
-                    sortAscending = !sortAscending;                                                                                                     
-                } else {                                                                                                                                                      
-                    sortColumn = fieldPath;                                                                                                                                   
-                    sortAscending = true; // Default to ascending                                                                                                             
-                }
-                UpdateDisplay();
-            });
+            th.addEventListener('click', () => {                                                                                                                          
+                    const fieldPath = columnMapping[header];                                                                                                                  
+                                                                                                                                                                              
+                    if (sortColumn === fieldPath) {                                                                                                                           
+                        if (sortDirection === 'asc') {                                                                                                                        
+                            sortDirection = 'desc'; // 2nd click                                                                                                              
+                        } else if (sortDirection === 'desc') {                                                                                                                
+                            // 3rd click                                                                                           
+                            sortColumn = 'name';                                                                                                                              
+                            sortDirection = 'asc';                                                                                                                            
+                        }                                                                                                                                                     
+                    } else {                                                                                                                                                  
+                        sortColumn = fieldPath;                                                                                                 
+                        sortDirection = 'asc';                                                                                                                                
+                    }                                                                                                                                                         
+                    UpdateDisplay();                                                                                                                                          
+                });
   
             
             if (fieldPath === sortColumn) {
-                th.textContent += sortAscending ? ' ascending' : ' descending';
+                th.textContent += sortDirection === 'asc' ? ' ascending' : ' descending' 
             }
   
             headerRow.appendChild(th);
@@ -303,7 +311,7 @@ function UpdateDisplay() {
     filteredHeroes.sort((a, b) => {
         const valA = getSortValue(a, sortColumn);
         const valB = getSortValue(b, sortColumn);
-        return compareValues(valA, valB, sortAscending, isNumeric);
+        return compareValues(valA, valB, sortDirection === 'asc', isNumeric);
     });
                                                                                           
     let limit = pageSize === 'all' ? filteredHeroes.length : parseInt(pageSize);                                                                                                                                                                                                                                                                                       

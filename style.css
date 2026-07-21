@@ -17,6 +17,8 @@ h1 {
     border-bottom: 1px solid #30363d;
     padding-bottom: 1px;
     text-align: center;
+
+    animation: villain-flash 2s infinite ease-in-out;
 }
 
 .controls {
@@ -91,3 +93,15 @@ button:not(:disabled):hover {
     cursor: pointer;
 }
 
+@keyframes villain-flash {                                                                                                                                                
+        0%, 100% {                                                                                                                                                            
+            color: #ff4444;                                                                                                                                                   
+            text-shadow: 0 0 8px rgba(255, 68, 68, 0.6);                                                                                                                      
+            opacity: 1;                                                                                                                                                       
+        }                                                                                                                                                                     
+        50% {                                                                                                                                                                 
+            color: #00ff88; /* Flashes neon green! */                                                                                                                         
+            text-shadow: 0 0 15px rgba(0, 255, 136, 0.9);                                                                                                                     
+            opacity: 0.5; /* Dims slightly for a pulsing look */                                                                                                              
+        }                                                                                                                                                                     
+} 
