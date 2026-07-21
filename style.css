@@ -12,10 +12,11 @@ header {
 }
 
 h1 {
-    color: #ff4444;
+    color: #44ff82;
     text-transform: uppercase;
     border-bottom: 1px solid #30363d;
-    padding-bottom: 10px;
+    padding-bottom: 1px;
+    text-align: center;
 }
 
 .controls {
@@ -36,7 +37,7 @@ input, select, button {
 
 input:focus, select:focus {
     outline: none;
-    border-color: #ff4444;
+    border-color: #44ff7f;
 }
 
 table {
@@ -61,7 +62,7 @@ th {
 
 th:hover {
     background-color: #30363d;
-    color: #ff4444;
+    color: #44ff54;
 }
 
 /* Constrain the target icons */
@@ -89,3 +90,4 @@ button:not(:disabled):hover {
     background-color: #30363d;
     cursor: pointer;
 }
+
