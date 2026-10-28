@@ -1,93 +1,63 @@
-# 🦹‍♂️ Sortable — Superhero Intelligence Database
+# Sortable — Superhero Intelligence Database
+
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES_Modules-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![CI](https://github.com/gelafros/sortable/actions/workflows/ci.yml/badge.svg)](https://github.com/gelafros/sortable/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > *"You either die a hero, or you live long enough to see yourself in a sortable table."*
 
-A villain's ultimate weapon: a sleek, lightning-fast web app for organizing **confidential dossiers** on every known superhero. Search them, sort them, study their weaknesses — all from a single page.
+A zero-dependency **Vanilla JavaScript (ES Modules)** web application for searching, multi-type sorting, and paginating the [Superhero API](https://rawcdn.githack.com/akabab/superhero-api/0.2.0/api/all.json) dataset across 560+ records.
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---|---|
-| 📊 **Data Table** | Displays icon, name, full name, all powerstats, race, gender, height, weight, place of birth, and alignment in a clean `<table>` |
-| 📄 **Pagination** | Browse results across pages — choose page size (10 · 20 · 50 · 100 · All) via a `<select>` dropdown. Default: **20** |
-| 🔍 **Live Search** | Filter heroes by name in real time — results update on every keystroke, no button needed |
-| ⬆️⬇️ **Column Sorting** | Click any header to sort ascending; click again to toggle descending. Numeric-aware (e.g. *78 kg* before *100 kg*). Missing values always sort last |
+| **Dynamic Data Table** | Renders icon, name, full name, all 6 powerstats, race, gender, height, weight, place of birth, and alignment in a responsive `<table>` |
+| **Unit-Aware Numeric Sorting** | Click any header to toggle `ascending` -> `descending` -> reset (`name` ascending). Parses & normalizes heterogeneous strings (`"188 cm"`, `"62.5 meters"`, `"95 kg"`, `"90,000 tons"`) so `78 kg` sorts before `100 kg` and `9 tons` sorts after `500 kg` |
+| **Missing-Value Invariant** | Missing, empty (`""`), placeholder (`"-"`), or zeroed (`"0 cm"`, `"0 kg"`) values are always sorted **last** regardless of ascending or descending direction |
+| **Real-Time Search** | Instant client-side filtering on every `input` keystroke |
+| **Configurable Pagination** | Select `10`, `20` (default), `50`, `100`, or `all` records per page with dynamic page bounds |
 
 ---
 
-## 🛠️ Tech Stack
+## Project Structure
 
-- **HTML / CSS / JavaScript** — zero frameworks, zero libraries, 100% vanilla
-- **Data Source** — [Superhero API](https://rawcdn.githack.com/akabab/superhero-api/0.2.0/api/all.json) via `fetch`
+```text
+sortable/
+├── index.html              # Application entry point
+├── style.css               # Dark UI theme
+├── sortable.js             # DOM creation, state management, pagination & event listeners
+├── helpers.js              # Pure unit-tested parsers & comparator functions
+├── all.json                # Local fallback snapshot of the Superhero API dataset
+├── tests/
+│   └── helpers.test.js     # Node.js built-in test suite for parsers & comparators
+└── package.json
+```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ```bash
-# Clone the repo
-git clone https://platform.zone01.gr/git/ebimai/sortable.git
+# Clone the repository
+git clone https://github.com/gelafros/sortable.git
 cd sortable
 
-# Option 1 — Open directly in your browser with Live Server
-open index.html
-
-
-# Option 2 — Serve with Python
+# Serve locally
 python3 -m http.server 8080
-# Then visit http://localhost:8080
+# Open http://localhost:8080 in your browser
 ```
 
-No build step. No dependencies. Just open and go.
+### Run Unit Tests
 
----
-
-## 📂 Project Structure
-
-```
-sortable/
-├── index.html      # Entry point
-├── style.css       # Villain-themed dark UI
-├── sortable.js     # All logic — fetch, search, sort, pagination
-├── all.json        # Local copy of superhero data
-└── README.md       # You are here
+```bash
+npm test
 ```
 
 ---
 
-## 📸 How It Works
+## License
 
-1. **On load** — hero data is fetched and rendered in a table, sorted by name (A → Z).
-2. **Search** — type in the search field to instantly filter heroes by name.
-3. **Sort** — click any column header to sort. Click again to reverse. Numeric columns sort by value, not by string.
-4. **Paginate** — use the dropdown to control how many rows per page, then navigate with Previous / Next.
-
----
-
-## 📋 Displayed Columns
-
-| Column | Data Path |
-|---|---|
-| Icon | `.images.xs` |
-| Name | `.name` |
-| Full Name | `.biography.fullName` |
-| Intelligence | `.powerstats.intelligence` |
-| Strength | `.powerstats.strength` |
-| Speed | `.powerstats.speed` |
-| Durability | `.powerstats.durability` |
-| Power | `.powerstats.power` |
-| Combat | `.powerstats.combat` |
-| Race | `.appearance.race` |
-| Gender | `.appearance.gender` |
-| Height | `.appearance.height` |
-| Weight | `.appearance.weight` |
-| Place of Birth | `.biography.placeOfBirth` |
-| Alignment | `.biography.alignment` |
-
----
-
-## 📄 License
-
-Educational project — [zone01](https://zone01.gr).
+Released under the [MIT License](LICENSE).

@@ -1,0 +1,6 @@
+# Node & OS artifacts
+node_modules/
+.DS_Store
+*:Zone.Identifier
+.vscode/
+.idea/
