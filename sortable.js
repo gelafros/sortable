@@ -1,4 +1,7 @@
-import { getNumericHeight, getNumericWeight, compareValues, getSortValue } from './helpers.js'; 
+import { compareValues, getSortValue } from "./helpers.js";
+
+const API_URL = "https://rawcdn.githack.com/akabab/superhero-api/0.2.0/api/all.json";
+const LOCAL_FALLBACK_URL = "./all.json";
 
 let allHeroes = [];
 let filteredHeroes = [];
@@ -16,7 +19,9 @@ let sortDirection = "asc";
 function createControls() {
   const searchField = document.createElement("input");
   searchField.id = "search-input";
+  searchField.type = "search";
   searchField.placeholder = "Search by name...";
+  searchField.setAttribute("aria-label", "Search heroes by name");
   document.body.appendChild(searchField);
 
   searchField.addEventListener("input", (event) => {
@@ -24,20 +29,21 @@ function createControls() {
 
     // Filter the heroes by name
     filteredHeroes = allHeroes.filter((hero) =>
-      hero.name.toLowerCase().includes(query),
+      (hero.name || "").toLowerCase().includes(query),
     );
 
     currentPage = 1;
-    UpdateDisplay();
+    updateDisplay();
   });
 
   const select = document.createElement("select");
   select.id = "page-size";
+  select.setAttribute("aria-label", "Results per page");
   const sizes = [10, 20, 50, 100, "all"];
   for (const size of sizes) {
     const option = document.createElement("option");
-    option.value = size;
-    option.textContent = size;
+    option.value = String(size);
+    option.textContent = String(size);
     if (size === 20) {
       option.selected = true;
     } // default size is 20
@@ -48,37 +54,41 @@ function createControls() {
   select.addEventListener("change", (event) => {
     pageSize = event.target.value;
     currentPage = 1; // Reset to first page
-    UpdateDisplay();
+    updateDisplay();
   });
 
   const prevButton = document.createElement("button");
   prevButton.id = "prev-btn";
+  prevButton.type = "button";
   prevButton.textContent = "Previous";
   document.body.appendChild(prevButton);
 
   prevButton.addEventListener("click", () => {
     if (currentPage > 1) {
       currentPage--;
-      UpdateDisplay();
+      updateDisplay();
     }
   });
 
   const nextButton = document.createElement("button");
   nextButton.id = "next-btn";
+  nextButton.type = "button";
   nextButton.textContent = "Next";
   document.body.appendChild(nextButton);
 
   nextButton.addEventListener("click", () => {
-    let limit = pageSize === "all" ? filteredHeroes.length : parseInt(pageSize);
-    let totalPages = Math.ceil(filteredHeroes.length / limit) || 1;
+    const limit = pageSize === "all" ? filteredHeroes.length : Number.parseInt(pageSize, 10);
+    const totalPages = (limit > 0 ? Math.ceil(filteredHeroes.length / limit) : 1) || 1;
     if (currentPage < totalPages) {
       currentPage++;
-      UpdateDisplay();
+      updateDisplay();
     }
   });
 
   const pageInfo = document.createElement("span");
   pageInfo.id = "page-info";
+  pageInfo.setAttribute("role", "status");
+  pageInfo.setAttribute("aria-live", "polite");
   pageInfo.textContent = "Page 1 of 1";
   document.body.appendChild(pageInfo);
 
@@ -91,10 +101,10 @@ function createControls() {
  * Dynamically builds and inserts the table structure for the list of heroes,
  * binding click sorting events to the header cells.
  *
- * @param {object[]} allHeroes The list of hero objects to display in the table.
+ * @param {object[]} heroes The list of hero objects to display in the table.
  * @returns {void}
  */
-function renderTable(allHeroes) {
+function renderTable(heroes) {
   const table = document.createElement("table");
 
   const headers = [
@@ -138,14 +148,13 @@ function renderTable(allHeroes) {
 
   for (const header of headers) {
     const th = document.createElement("th");
+    th.scope = "col";
     th.textContent = header;
-    th.style.cursor = "pointer"; //
+    th.style.cursor = "pointer";
 
     const fieldPath = columnMapping[header];
 
     th.addEventListener("click", () => {
-      const fieldPath = columnMapping[header];
-
       if (sortColumn === fieldPath) {
         if (sortDirection === "asc") {
           sortDirection = "desc"; // 2nd click
@@ -158,11 +167,14 @@ function renderTable(allHeroes) {
         sortColumn = fieldPath;
         sortDirection = "asc";
       }
-      UpdateDisplay();
+      updateDisplay();
     });
 
     if (fieldPath === sortColumn) {
       th.textContent += sortDirection === "asc" ? " ascending" : " descending";
+      th.setAttribute("aria-sort", sortDirection === "asc" ? "ascending" : "descending");
+    } else {
+      th.setAttribute("aria-sort", "none");
     }
 
     headerRow.appendChild(th);
@@ -171,12 +183,16 @@ function renderTable(allHeroes) {
   tableHead.appendChild(headerRow);
   table.appendChild(tableHead);
 
-  for (const hero of allHeroes) {
+  const tableBody = document.createElement("tbody");
+
+  for (const hero of heroes) {
     const row = document.createElement("tr");
 
     const iconCell = document.createElement("td");
     const img = document.createElement("img");
-    img.src = hero.images.xs;
+    img.src = hero.images?.xs || "";
+    img.alt = hero.name ? `${hero.name} icon` : "Hero icon";
+    img.loading = "lazy";
     iconCell.appendChild(img);
     row.appendChild(iconCell);
 
@@ -185,62 +201,64 @@ function renderTable(allHeroes) {
     row.appendChild(nameCell);
 
     const fullNameCell = document.createElement("td");
-    fullNameCell.textContent = hero.biography.fullName;
+    fullNameCell.textContent = hero.biography?.fullName;
     row.appendChild(fullNameCell);
 
     const intelligenceCell = document.createElement("td");
-    intelligenceCell.textContent = hero.powerstats.intelligence;
+    intelligenceCell.textContent = hero.powerstats?.intelligence;
     row.appendChild(intelligenceCell);
 
     const raceCell = document.createElement("td");
-    raceCell.textContent = hero.appearance.race;
+    raceCell.textContent = hero.appearance?.race;
     row.appendChild(raceCell);
 
     const genderCell = document.createElement("td");
-    genderCell.textContent = hero.appearance.gender;
+    genderCell.textContent = hero.appearance?.gender;
     row.appendChild(genderCell);
 
     const heightCell = document.createElement("td");
-    heightCell.textContent = hero.appearance.height;
+    heightCell.textContent = hero.appearance?.height;
     row.appendChild(heightCell);
 
     const weightCell = document.createElement("td");
-    weightCell.textContent = hero.appearance.weight;
+    weightCell.textContent = hero.appearance?.weight;
     row.appendChild(weightCell);
 
     const placeCell = document.createElement("td");
-    placeCell.textContent = hero.biography.placeOfBirth;
+    placeCell.textContent = hero.biography?.placeOfBirth;
     row.appendChild(placeCell);
 
-    const allignCell = document.createElement("td");
-    allignCell.textContent = hero.biography.alignment;
-    row.appendChild(allignCell);
+    const alignCell = document.createElement("td");
+    alignCell.textContent = hero.biography?.alignment;
+    row.appendChild(alignCell);
 
     const strengthCell = document.createElement("td");
-    strengthCell.textContent = hero.powerstats.strength;
+    strengthCell.textContent = hero.powerstats?.strength;
     row.appendChild(strengthCell);
 
     const speedCell = document.createElement("td");
-    speedCell.textContent = hero.powerstats.speed;
+    speedCell.textContent = hero.powerstats?.speed;
     row.appendChild(speedCell);
 
     const durabilityCell = document.createElement("td");
-    durabilityCell.textContent = hero.powerstats.durability;
+    durabilityCell.textContent = hero.powerstats?.durability;
     row.appendChild(durabilityCell);
 
     const powerCell = document.createElement("td");
-    powerCell.textContent = hero.powerstats.power;
+    powerCell.textContent = hero.powerstats?.power;
     row.appendChild(powerCell);
 
     const combatCell = document.createElement("td");
-    combatCell.textContent = hero.powerstats.combat;
+    combatCell.textContent = hero.powerstats?.combat;
     row.appendChild(combatCell);
 
-    table.appendChild(row);
+    tableBody.appendChild(row);
   }
 
+  table.appendChild(tableBody);
+
   const container = document.getElementById("table-container");
-  container.innerHTML = "";
+  container.textContent = "";
   container.appendChild(table);
 }
 
@@ -249,7 +267,7 @@ function renderTable(allHeroes) {
  *
  * @returns {void}
  */
-function UpdateDisplay() {
+function updateDisplay() {
   const isNumeric =
     sortColumn.startsWith("powerstats") ||
     sortColumn === "appearance.height" ||
@@ -262,15 +280,19 @@ function UpdateDisplay() {
     return compareValues(valA, valB, sortDirection === "asc", isNumeric);
   });
 
-  let limit = pageSize === "all" ? filteredHeroes.length : parseInt(pageSize);
-  let totalPages = Math.ceil(filteredHeroes.length / limit) || 1;
+  const limit = pageSize === "all" ? filteredHeroes.length : Number.parseInt(pageSize, 10);
+  const totalPages = (limit > 0 ? Math.ceil(filteredHeroes.length / limit) : 1) || 1;
 
-  if (currentPage > totalPages) currentPage = totalPages;
-  if (currentPage < 1) currentPage = 1;
+  if (currentPage > totalPages) {
+    currentPage = totalPages;
+  }
+  if (currentPage < 1) {
+    currentPage = 1;
+  }
 
-  let startIndex = (currentPage - 1) * limit;
-  let endIndex = startIndex + limit;
-  let pageHeroes = filteredHeroes.slice(startIndex, endIndex);
+  const startIndex = (currentPage - 1) * limit;
+  const endIndex = startIndex + limit;
+  const pageHeroes = filteredHeroes.slice(startIndex, endIndex);
 
   renderTable(pageHeroes);
 
@@ -286,13 +308,44 @@ function UpdateDisplay() {
  * @param {object[]} heroes The fetched list of hero objects.
  * @returns {void}
  */
-const loadData = (heroes) => {
-  allHeroes = heroes;
-  filteredHeroes = [...heroes];
+function loadData(heroes) {
+  allHeroes = Array.isArray(heroes) ? heroes : [];
+  filteredHeroes = [...allHeroes];
   createControls();
-  UpdateDisplay();
-};
+  updateDisplay();
+}
 
-fetch("https://rawcdn.githack.com/akabab/superhero-api/0.2.0/api/all.json")
-  .then((response) => response.json())
-  .then(loadData);
+/**
+ * Fetches the superhero dataset from the remote API, falling back to the local
+ * `all.json` snapshot if the remote endpoint fails or is unreachable.
+ *
+ * @returns {Promise<void>}
+ */
+async function init() {
+  try {
+    const response = await fetch(API_URL);
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
+    }
+    const heroes = await response.json();
+    loadData(heroes);
+  } catch {
+    try {
+      const fallbackResponse = await fetch(LOCAL_FALLBACK_URL);
+      if (!fallbackResponse.ok) {
+        throw new Error(`Fallback HTTP error ${fallbackResponse.status}`);
+      }
+      const heroes = await fallbackResponse.json();
+      loadData(heroes);
+    } catch {
+      const errorMsg = document.createElement("p");
+      errorMsg.id = "error-message";
+      errorMsg.setAttribute("role", "alert");
+      errorMsg.textContent = "Failed to load superhero data. Please try refreshing the page.";
+      document.body.appendChild(errorMsg);
+    }
+  }
+}
+
+void init();
+

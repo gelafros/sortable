@@ -9,18 +9,18 @@ export function getNumericHeight(heightArray) {
   if (!heightArray || heightArray.length < 2) {
     return null;
   }
-  let cmStr = heightArray[1];
-  if (!cmStr || cmStr === "-" || cmStr === "0 cm") {
+  const rawCmStr = heightArray[1];
+  if (!rawCmStr || rawCmStr === "-" || rawCmStr === "0 cm") {
     return null;
   }
-  cmStr = cmStr.trim();
+  const cmStr = rawCmStr.trim();
   if (cmStr.endsWith(" meters")) {
-    let meters = parseFloat(cmStr.replace(/,/g, ""));
-    return isNaN(meters) ? null : meters * 100;
+    const meters = parseFloat(cmStr.replace(/,/g, ""));
+    return Number.isNaN(meters) || meters === 0 ? null : meters * 100;
   }
-  let cm = parseFloat(cmStr.replace(/,/g, ""));
+  const cm = parseFloat(cmStr.replace(/,/g, ""));
 
-  return isNaN(cm) || cm === 0 ? null : cm;
+  return Number.isNaN(cm) || cm === 0 ? null : cm;
 }
 
 /**
@@ -34,17 +34,17 @@ export function getNumericWeight(weightArray) {
   if (!weightArray || weightArray.length < 2) {
     return null;
   }
-  let kgStr = weightArray[1];
-  if (!kgStr || kgStr === "-" || kgStr === "0 kg") {
+  const rawKgStr = weightArray[1];
+  if (!rawKgStr || rawKgStr === "-" || rawKgStr === "0 kg") {
     return null;
   }
-  kgStr = kgStr.trim();
+  const kgStr = rawKgStr.trim();
   if (kgStr.endsWith(" tons")) {
-    let tons = parseFloat(kgStr.replace(/,/g, ""));
-    return isNaN(tons) ? null : tons * 1000;
+    const tons = parseFloat(kgStr.replace(/,/g, ""));
+    return Number.isNaN(tons) || tons === 0 ? null : tons * 1000;
   }
-  let kg = parseFloat(kgStr.replace(/,/g, ""));
-  return isNaN(kg) || kg === 0 ? null : kg;
+  const kg = parseFloat(kgStr.replace(/,/g, ""));
+  return Number.isNaN(kg) || kg === 0 ? null : kg;
 }
 
 /**
@@ -57,8 +57,8 @@ export function getNumericWeight(weightArray) {
  * @returns {number} A negative value if a < b, positive if a > b, or 0 if equal.
  */
 export function compareValues(a, b, isAsc, isNumeric) {
-  let isMissingA = a === null || a === undefined || a === "" || a === "-";
-  let isMissingB = b === null || b === undefined || b === "" || b === "-";
+  const isMissingA = a === null || a === undefined || a === "" || a === "-" || a === "null";
+  const isMissingB = b === null || b === undefined || b === "" || b === "-" || b === "null";
 
   if (isMissingA && isMissingB) {
     return 0;
@@ -71,14 +71,14 @@ export function compareValues(a, b, isAsc, isNumeric) {
   } // 'b' (missing) goes last
 
   if (isNumeric) {
-    let numA = Number(a);
-    let numB = Number(b);
+    const numA = Number(a);
+    const numB = Number(b);
     return isAsc ? numA - numB : numB - numA;
-  } else {
-    let strA = String(a).toLowerCase();
-    let strB = String(b).toLowerCase();
-    return isAsc ? strA.localeCompare(strB) : strB.localeCompare(strA);
   }
+
+  const strA = String(a).toLowerCase();
+  const strB = String(b).toLowerCase();
+  return isAsc ? strA.localeCompare(strB) : strB.localeCompare(strA);
 }
 
 /**
@@ -89,18 +89,23 @@ export function compareValues(a, b, isAsc, isNumeric) {
  * @returns {any} The resolved sortable value.
  */
 export function getSortValue(hero, col) {
+  if (!hero) {
+    return null;
+  }
   if (col === "appearance.height") {
-    return getNumericHeight(hero.appearance.height);
+    return getNumericHeight(hero.appearance?.height);
   }
   if (col === "appearance.weight") {
-    return getNumericWeight(hero.appearance.weight);
+    return getNumericWeight(hero.appearance?.weight);
   }
 
   // For nested fields like biography.fullName, we split by '.' and traverse
   const parts = col.split(".");
   let val = hero;
   for (const part of parts) {
-    if (val === null || val === undefined) return null;
+    if (val === null || val === undefined) {
+      return null;
+    }
     val = val[part];
   }
   return val;
