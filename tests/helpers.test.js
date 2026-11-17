@@ -56,4 +56,7 @@ test("getSortValue resolves nested fields and unit conversions", () => {
   assert.equal(getSortValue(hero, "powerstats.strength"), 100);
   assert.equal(getSortValue(hero, "appearance.height"), 975);
   assert.equal(getSortValue(hero, "appearance.weight"), 16000);
+  assert.equal(getSortValue({}, "appearance.height"), null);
+  assert.equal(getSortValue(null, "name"), null);
 });
+
