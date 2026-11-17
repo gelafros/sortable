@@ -19,10 +19,24 @@ A zero-dependency **Vanilla JavaScript (ES Modules)** web application for search
 | **Missing-Value Invariant** | Missing, empty (`""`), placeholder (`"-"`), or zeroed (`"0 cm"`, `"0 kg"`) values are always sorted **last** regardless of ascending or descending direction |
 | **Real-Time Search** | Instant client-side filtering on every `input` keystroke |
 | **Configurable Pagination** | Select `10`, `20` (default), `50`, `100`, or `all` records per page with dynamic page bounds |
+| **Resilient Data Loading** | Fetches from the remote Superhero API with automatic fallback to the local `all.json` snapshot and graceful error reporting |
 
 ---
 
-## Project Structure
+## Architecture Overview
+
+The application is structured into two modular ES modules with zero runtime dependencies:
+
+1. **Pure Data & Sorting Logic (`helpers.js`)**:
+   - `getNumericHeight(heightArray)` & `getNumericWeight(weightArray)`: Normalize heterogeneous metric strings (`cm`, `meters`, `kg`, `tons`) into base numeric values (`cm` and `kg`), returning `null` for missing or zeroed placeholders.
+   - `getSortValue(hero, col)`: Resolves nested dot-notated property paths (e.g., `biography.fullName`, `powerstats.intelligence`) or delegates to unit parsers for height and weight.
+   - `compareValues(a, b, isAsc, isNumeric)`: Enforces the missing-value invariant (always sorting `null`, `undefined`, `""`, `"-"`, or `"null"` last in both ascending and descending directions) before applying numeric or case-insensitive locale string comparison.
+2. **UI & State Controller (`sortable.js`)**:
+   - Manages table state (`allHeroes`, `filteredHeroes`, `currentPage`, `pageSize`, `sortColumn`, `sortDirection`).
+   - Builds semantic, accessible controls and table markup (`<thead>`, `<tbody>`, `<th scope="col" aria-sort="...">`).
+   - Handles asynchronous data fetching (`init()`) with HTTP status validation, automatic fallback to `./all.json`, and user-visible error alerts.
+
+### Project Structure
 
 ```text
 sortable/

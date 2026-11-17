@@ -1,6 +1,16 @@
 # Node & OS artifacts
 node_modules/
+dist/
+build/
+coverage/
+*.log
+.env
+.env.*
 .DS_Store
 *:Zone.Identifier
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
